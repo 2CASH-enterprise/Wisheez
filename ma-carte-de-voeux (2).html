@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wisheez — Votre carte de vœux personnalisée</title>
+<meta name="description" content="Wisheez : décrivez l'occasion, recevez une carte de vœux animée sur WhatsApp en quelques minutes. Première carte offerte.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340;0,9..144,480;0,9..144,560;1,9..144,420;1,9..144,500&family=Inter:wght@400;500;600&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #1F3A2E;
+    --bg-deep: #16281F;
+    --paper: #F6EFE0;
+    --paper-soft: #EFE6D2;
+    --gold: #C9A227;
+    --gold-light: #E4C765;
+    --blush: #E8B4AE;
+    --ink: #142019;
+    --ink-soft: rgba(20,32,25,0.68);
+    --cream-ink: rgba(246,239,224,0.82);
+    --cream-ink-soft: rgba(246,239,224,0.58);
+    --radius-card: 20px;
+    --radius-btn: 999px;
+    --max: 1080px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--cream-ink);
+    font-family:'Inter', sans-serif;
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  img,svg{display:block;max-width:100%;}
+  a{color:inherit;}
+  h1,h2,h3{font-family:'Fraunces', serif;font-weight:480;margin:0;color:var(--paper);}
+  p{margin:0;}
+  ::selection{background:var(--gold);color:var(--ink);}
+  a:focus-visible, button:focus-visible{outline:2px solid var(--gold-light);outline-offset:3px;border-radius:4px;}
+
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px;}
+  section{padding:96px 0;}
+  @media (max-width:640px){ section{padding:64px 0;} }
+
+  /* ---------- NAV ---------- */
+  .nav{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:28px 24px;max-width:var(--max);margin:0 auto;
+  }
+  .nav__mark{
+    font-family:'Fraunces', serif;font-style:italic;font-weight:500;
+    font-size:20px;color:var(--paper);letter-spacing:0.01em;
+  }
+  .nav__cta{
+    font-family:'Inter', sans-serif;font-size:14px;font-weight:600;
+    color:var(--bg);background:var(--gold-light);
+    padding:10px 20px;border-radius:var(--radius-btn);
+    text-decoration:none;white-space:nowrap;
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding:40px 0 100px;
+    display:grid;grid-template-columns:1fr;gap:56px;align-items:center;
+  }
+  @media (min-width:860px){
+    .hero{grid-template-columns:1.05fr 0.95fr;padding:56px 0 120px;}
+  }
+  .hero__eyebrow{
+    font-size:13px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--gold-light);margin-bottom:18px;display:block;
+  }
+  .hero__title{
+    font-size:clamp(34px, 5.4vw, 56px);line-height:1.06;letter-spacing:-0.01em;
+    max-width:11.5ch;
+  }
+  .hero__title em{
+    font-style:italic;font-weight:420;color:var(--gold-light);
+  }
+  .hero__sub{
+    margin-top:26px;font-size:18px;line-height:1.65;color:var(--cream-ink-soft);
+    max-width:46ch;
+  }
+  .hero__actions{margin-top:38px;display:flex;flex-direction:column;gap:12px;align-items:flex-start;}
+  .btn-seal{
+    display:inline-flex;align-items:center;gap:12px;
+    background:var(--gold-light);color:var(--ink);
+    font-family:'Inter', sans-serif;font-weight:600;font-size:16px;
+    padding:16px 28px 16px 22px;border-radius:var(--radius-btn);
+    text-decoration:none;border:1px solid rgba(20,32,25,0.08);
+    transition:transform 0.18s ease, box-shadow 0.18s ease;
+    box-shadow:0 1px 0 rgba(20,32,25,0.12);
+  }
+  .btn-seal:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.22);}
+  .btn-seal__dot{
+    width:26px;height:26px;border-radius:50%;background:var(--bg);
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .btn-seal__dot svg{width:13px;height:13px;}
+  .hero__note{font-size:14px;color:var(--cream-ink-soft);padding-left:4px;}
+  .hero__note strong{color:var(--paper);font-weight:600;}
+
+  /* ---------- HERO SCENE (envelope + phone) ---------- */
+  .scene{
+    position:relative;height:420px;display:flex;align-items:center;justify-content:center;
+    perspective:1400px;
+  }
+  .scene__envelope{
+    position:relative;width:280px;height:190px;
+  }
+  .scene__back{
+    position:absolute;inset:0;background:var(--paper-soft);border-radius:10px;
+    box-shadow:0 30px 60px rgba(0,0,0,0.32);
+  }
+  .scene__back::before{
+    content:'';position:absolute;left:0;right:0;bottom:0;height:96%;
+    background:linear-gradient(135deg, transparent 49.4%, rgba(20,32,25,0.06) 50%),
+               linear-gradient(-135deg, transparent 49.4%, rgba(20,32,25,0.06) 50%);
+  }
+  .scene__flap{
+    position:absolute;top:0;left:0;right:0;height:95px;
+    background:var(--paper);
+    clip-path:polygon(0 0, 100% 0, 50% 100%);
+    transform-origin:top center;
+    transform:rotateX(0deg);
+    border-radius:10px 10px 0 0;
+  }
+  .scene__seal{
+    position:absolute;top:66px;left:50%;translate:-50% -50%;
+    width:56px;height:56px;z-index:3;
+  }
+  .scene__phone{
+    position:absolute;left:50%;bottom:-14px;translate:-50% 0;
+    width:150px;height:280px;background:var(--ink);
+    border-radius:22px;padding:8px;
+    box-shadow:0 24px 50px rgba(0,0,0,0.4);
+    opacity:1;
+  }
+  .scene__phone-screen{
+    width:100%;height:100%;border-radius:16px;background:#0B141A;overflow:hidden;
+    display:flex;flex-direction:column;
+  }
+  .scene__phone-bar{
+    background:#1F3A2E;padding:9px 10px;display:flex;align-items:center;gap:8px;
+  }
+  .scene__phone-bar-dot{width:20px;height:20px;border-radius:50%;background:var(--gold-light);flex:none;}
+  .scene__phone-bar-lines span{display:block;height:5px;border-radius:3px;background:rgba(246,239,224,0.5);margin-bottom:4px;}
+  .scene__phone-bar-lines span:first-child{width:52px;}
+  .scene__phone-bar-lines span:last-child{width:34px;background:rgba(246,239,224,0.28);}
+  .scene__phone-body{flex:1;padding:12px 8px;display:flex;align-items:flex-end;}
+  .scene__bubble{
+    background:#005C4B;border-radius:12px 12px 12px 3px;padding:6px;width:100%;
+  }
+  .scene__bubble-video{
+    width:100%;aspect-ratio:4/5;border-radius:8px;
+    background:linear-gradient(160deg, var(--gold) 0%, #8a6d15 100%);
+    display:flex;align-items:center;justify-content:center;position:relative;
+  }
+  .scene__play{
+    width:34px;height:34px;border-radius:50%;background:rgba(246,239,224,0.92);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .scene__play svg{width:12px;height:12px;margin-left:2px;}
+  .scene__bubble-caption{font-family:'Caveat', cursive;font-size:15px;color:var(--cream-ink);padding:6px 4px 2px;}
+
+  @media (prefers-reduced-motion:no-preference){
+    body.js-animate .scene__seal{ animation: sealPop 0.55s cubic-bezier(.2,.8,.3,1) both, sealCrack 0.5s ease 1.05s forwards; }
+    body.js-animate .scene__flap{ animation: flapOpen 0.7s cubic-bezier(.4,.0,.2,1) 1.1s both; }
+    body.js-animate .scene__phone{
+      opacity:0; transform:translate(-50%, 30px);
+      animation: phoneRise 0.7s cubic-bezier(.2,.8,.3,1) 1.5s forwards;
+    }
+    body:not(.js-animate) .scene__seal, body:not(.js-animate) .scene__flap, body:not(.js-animate) .scene__phone{
+      opacity:1;
+    }
+  }
+  @keyframes sealPop{ from{opacity:0;transform:translate(-50%,-50%) scale(0.4);} to{opacity:1;transform:translate(-50%,-50%) scale(1);} }
+  @keyframes sealCrack{ to{opacity:0;transform:translate(-50%,-50%) scale(1.25) rotate(14deg);} }
+  @keyframes flapOpen{ to{ transform:rotateX(-165deg); } }
+  @keyframes phoneRise{ to{opacity:1;transform:translate(-50%,0);} }
+
+  /* ---------- COMMENT CA MARCHE ---------- */
+  .steps__head{max-width:52ch;margin-bottom:56px;}
+  .steps__eyebrow{
+    font-size:13px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--gold-light);display:block;margin-bottom:14px;
+  }
+  .steps__title{font-size:clamp(26px,3.6vw,36px);}
+  .steps__grid{display:grid;grid-template-columns:1fr;gap:36px;}
+  @media (min-width:760px){ .steps__grid{grid-template-columns:repeat(3,1fr);gap:32px;} }
+  .step__num{
+    width:44px;height:44px;border-radius:50%;
+    border:1px solid var(--gold);color:var(--gold-light);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces', serif;font-size:15px;margin-bottom:20px;
+  }
+  .step__title{font-size:19px;font-weight:560;margin-bottom:10px;}
+  .step__body{color:var(--cream-ink-soft);font-size:15.5px;line-height:1.6;max-width:36ch;}
+
+  /* ---------- OCCASIONS ---------- */
+  .occasions{background:var(--paper);color:var(--ink);border-radius:28px;}
+  .occasions .wrap{padding-top:8px;padding-bottom:8px;}
+  .occasions__inner{padding:80px 0;}
+  .occasions__head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:44px;flex-wrap:wrap;}
+  .occasions__title{font-size:clamp(24px,3.2vw,32px);color:var(--ink);max-width:20ch;}
+  .occasions__sub{color:var(--ink-soft);font-size:15px;max-width:32ch;}
+  .occasions__grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
+  @media (min-width:760px){ .occasions__grid{grid-template-columns:repeat(4,1fr);} }
+  .occasion-card{
+    background:var(--paper-soft);border-radius:16px;padding:22px 18px;
+    border:1px solid rgba(20,32,25,0.08);
+  }
+  .occasion-card__tag{
+    font-family:'Fraunces', serif;font-style:italic;font-size:15px;color:var(--bg);
+    margin-bottom:34px;display:block;
+  }
+  .occasion-card__line{
+    height:1px;background:rgba(20,32,25,0.14);margin-bottom:12px;
+  }
+  .occasion-card__desc{font-size:13.5px;color:var(--ink-soft);line-height:1.5;}
+
+  /* ---------- POURQUOI ---------- */
+  .why{display:grid;grid-template-columns:1fr;gap:44px;}
+  @media (min-width:860px){ .why{grid-template-columns:0.85fr 1.15fr;gap:64px;align-items:start;} }
+  .why__title{font-size:clamp(26px,3.6vw,36px);max-width:12ch;}
+  .why__list{display:flex;flex-direction:column;gap:32px;}
+  .why__item{display:flex;gap:18px;}
+  .why__mark{
+    font-family:'Fraunces', serif;font-style:italic;color:var(--gold-light);
+    font-size:22px;flex:none;width:2ch;
+  }
+  .why__item-title{font-size:17px;font-weight:560;color:var(--paper);margin-bottom:6px;}
+  .why__item-body{color:var(--cream-ink-soft);font-size:15px;line-height:1.6;max-width:46ch;}
+
+  /* ---------- TARIF ---------- */
+  .pricing{
+    background:var(--bg-deep);border-radius:28px;
+    text-align:center;padding:80px 24px;
+  }
+  .pricing__title{font-size:clamp(26px,3.6vw,34px);max-width:24ch;margin:0 auto 18px;}
+  .pricing__sub{color:var(--cream-ink-soft);max-width:44ch;margin:0 auto 40px;font-size:16px;}
+  .pricing__row{
+    display:inline-flex;gap:0;border:1px solid rgba(246,239,224,0.16);
+    border-radius:18px;overflow:hidden;margin-bottom:36px;
+  }
+  .pricing__col{padding:28px 34px;min-width:180px;}
+  .pricing__col + .pricing__col{border-left:1px solid rgba(246,239,224,0.16);}
+  .pricing__col-label{font-size:12.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--cream-ink-soft);margin-bottom:10px;}
+  .pricing__col-value{font-family:'Fraunces', serif;font-size:30px;color:var(--gold-light);}
+  .pricing__col-value small{font-family:'Inter',sans-serif;font-size:14px;color:var(--cream-ink-soft);font-weight:500;}
+
+  /* ---------- FOOTER ---------- */
+  footer{padding:48px 0 40px;border-top:1px solid rgba(246,239,224,0.12);}
+  .footer__row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:18px;align-items:center;}
+  .footer__mark{font-family:'Fraunces', serif;font-style:italic;color:var(--paper);font-size:17px;}
+  .footer__meta{font-size:13px;color:var(--cream-ink-soft);}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav__mark">Wisheez</span>
+  <a class="nav__cta" href="#recevoir">Créer ma carte</a>
+</nav>
+
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <span class="hero__eyebrow">Wisheez · Votre carte de vœux personnalisée</span>
+      <h1 class="hero__title">Une carte qui <em>prend vie</em>, reçue sur WhatsApp</h1>
+      <p class="hero__sub">Racontez l'occasion en quelques mots. On la transforme en vidéo personnalisée, livrée directement dans la conversation où vos proches vous lisent déjà.</p>
+      <div class="hero__actions">
+        <a class="btn-seal" id="recevoir" href="https://wa.me/33600000000?text=Bonjour%2C%20je%20souhaite%20cr%C3%A9er%20ma%20carte%20de%20v%C5%93ux">
+          <span class="btn-seal__dot" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M20.5 3.5C16 -1 8 -1 3.5 3.5s-4.5 12 0 16.5L2 24l4.2-1.4C10.6 26 18 24.3 20.5 19.8c4.5-4.5 4.5-11.8 0-16.3Z" fill="#25D366" stroke="none"/></svg>
+          </span>
+          Recevoir ma carte sur WhatsApp
+        </a>
+        <span class="hero__note"><strong>Votre première carte est offerte.</strong> Aucune application à installer.</span>
+      </div>
+    </div>
+
+    <div class="scene" aria-hidden="true">
+      <div class="scene__envelope">
+        <div class="scene__back"></div>
+        <div class="scene__flap"></div>
+        <svg class="scene__seal" viewBox="0 0 56 56">
+          <circle cx="28" cy="28" r="27" fill="#C9A227"/>
+          <circle cx="28" cy="28" r="27" fill="none" stroke="#8a6d15" stroke-width="1"/>
+          <text x="28" y="35" text-anchor="middle" font-family="Fraunces, serif" font-style="italic" font-size="24" fill="#1F3A2E">W</text>
+        </svg>
+        <div class="scene__phone">
+          <div class="scene__phone-screen">
+            <div class="scene__phone-bar">
+              <div class="scene__phone-bar-dot"></div>
+              <div class="scene__phone-bar-lines">
+                <span></span><span></span>
+              </div>
+            </div>
+            <div class="scene__phone-body">
+              <div class="scene__bubble">
+                <div class="scene__bubble-video">
+                  <div class="scene__play">
+                    <svg viewBox="0 0 12 12" fill="none"><path d="M1 1L11 6L1 11V1Z" fill="#1F3A2E"/></svg>
+                  </div>
+                </div>
+                <p class="scene__bubble-caption">Pour Marie, avec amour</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+</div>
+
+<section>
+  <div class="wrap steps">
+    <div class="steps__head">
+      <span class="steps__eyebrow">Comment ça marche</span>
+      <h2 class="steps__title">Trois messages, une carte prête à envoyer</h2>
+    </div>
+    <div class="steps__grid">
+      <div>
+        <div class="step__num">01</div>
+        <h3 class="step__title">Écrivez-nous</h3>
+        <p class="step__body">Un seul message pour démarrer : dites-nous simplement qui vous fêtez aujourd'hui.</p>
+      </div>
+      <div>
+        <div class="step__num">02</div>
+        <h3 class="step__title">Racontez l'occasion</h3>
+        <p class="step__body">Anniversaire, mariage, félicitations : quelques mots sur la personne, un ton, une couleur qui lui ressemble.</p>
+      </div>
+      <div>
+        <div class="step__num">03</div>
+        <h3 class="step__title">Recevez la vidéo</h3>
+        <p class="step__body">Votre carte animée arrive dans la conversation en quelques minutes, prête à être transférée.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="occasions">
+  <div class="wrap">
+    <div class="occasions__inner">
+      <div class="occasions__head">
+        <h2 class="occasions__title">Une carte pour chaque moment qui compte</h2>
+        <p class="occasions__sub">Le ton et le style s'adaptent à l'occasion — jamais un modèle générique.</p>
+      </div>
+      <div class="occasions__grid">
+        <div class="occasion-card">
+          <span class="occasion-card__tag">Anniversaire</span>
+          <div class="occasion-card__line"></div>
+          <p class="occasion-card__desc">Chaleureuse et joyeuse, avec le prénom et les goûts de la personne fêtée.</p>
+        </div>
+        <div class="occasion-card">
+          <span class="occasion-card__tag">Mariage & remerciements</span>
+          <div class="occasion-card__line"></div>
+          <p class="occasion-card__desc">Élégante et sobre, pensée pour dire merci à chaque invité, un par un.</p>
+        </div>
+        <div class="occasion-card">
+          <span class="occasion-card__tag">Félicitations</span>
+          <div class="occasion-card__line"></div>
+          <p class="occasion-card__desc">Naissance, réussite, nouveau départ : une carte à la hauteur de la nouvelle.</p>
+        </div>
+        <div class="occasion-card">
+          <span class="occasion-card__tag">Fêtes de fin d'année</span>
+          <div class="occasion-card__line"></div>
+          <p class="occasion-card__desc">Un vœu animé à partager en famille, plus vivant qu'un message copié-collé.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap why">
+    <h2 class="why__title">Pas juste une carte de plus</h2>
+    <div class="why__list">
+      <div class="why__item">
+        <span class="why__mark" aria-hidden="true">01</span>
+        <div>
+          <p class="why__item-title">Une vidéo, pas une image</p>
+          <p class="why__item-body">Le mouvement raconte ce qu'un papier ou une photo ne peuvent pas dire — un texte qui s'anime, une musique, un rythme pensé pour l'occasion.</p>
+        </div>
+      </div>
+      <div class="why__item">
+        <span class="why__mark" aria-hidden="true">02</span>
+        <div>
+          <p class="why__item-title">Composée pour cette personne précise</p>
+          <p class="why__item-body">Pas de modèle générique piqué dans un catalogue : chaque carte est écrite à partir de ce que vous nous racontez.</p>
+        </div>
+      </div>
+      <div class="why__item">
+        <span class="why__mark" aria-hidden="true">03</span>
+        <div>
+          <p class="why__item-title">Là où la conversation existe déjà</p>
+          <p class="why__item-body">Pas de nouvelle application à installer, pas de compte à créer. Votre carte arrive dans WhatsApp, entre deux messages avec vos proches.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="pricing">
+      <h2 class="pricing__title">Simple : la première est offerte</h2>
+      <p class="pricing__sub">Aucun abonnement, aucun engagement. Vous ne payez que les cartes suivantes, quand vous en avez besoin.</p>
+      <div class="pricing__row">
+        <div class="pricing__col">
+          <div class="pricing__col-label">1ère carte</div>
+          <div class="pricing__col-value">Offerte</div>
+        </div>
+        <div class="pricing__col">
+          <div class="pricing__col-label">Cartes suivantes</div>
+          <div class="pricing__col-value">2,99 € <small>/ carte</small></div>
+        </div>
+      </div>
+      <div>
+        <a class="btn-seal" href="https://wa.me/33600000000?text=Bonjour%2C%20je%20souhaite%20cr%C3%A9er%20ma%20carte%20de%20v%C5%93ux">
+          <span class="btn-seal__dot" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M20.5 3.5C16 -1 8 -1 3.5 3.5s-4.5 12 0 16.5L2 24l4.2-1.4C10.6 26 18 24.3 20.5 19.8c4.5-4.5 4.5-11.8 0-16.3Z" fill="#25D366" stroke="none"/></svg>
+          </span>
+          Créer ma première carte
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer__row">
+    <span class="footer__mark">Wisheez</span>
+    <span class="footer__meta">© 2026 · Service indépendant, non affilié à WhatsApp Inc.</span>
+  </div>
+</footer>
+
+<script>
+  if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+    document.body.classList.add('js-animate');
+  }
+</script>
+
+</body>
+</html>
