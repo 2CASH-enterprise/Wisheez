@@ -136,9 +136,21 @@
 
       <div data-step="1" class="active">
         <div class="step-badge">1</div>
-        <h2 class="step-title">Pour qui est cette carte ?</h2>
-        <p class="step-sub">Le prénom suffit.</p>
-        <input class="field" id="inputDestinataire" type="text" placeholder="Marie" autocomplete="off" />
+        <h2 class="step-title">Combien de personnes vont recevoir cette carte ?</h2>
+        <p class="step-sub">Un remerciement de mariage à 80 invités ? On adapte le prix automatiquement.</p>
+        <input class="field" id="inputRecipientCount" type="number" min="1" max="199" value="1" placeholder="1" />
+
+        <div id="singleNameBlock" style="margin-top:18px;">
+          <p class="step-sub" style="margin-bottom:8px;">Le prénom du destinataire :</p>
+          <input class="field" id="inputDestinataire" type="text" placeholder="Marie" autocomplete="off" />
+        </div>
+
+        <div id="multiNameBlock" style="display:none;margin-top:18px;">
+          <p class="step-sub" style="margin-bottom:8px;">Un prénom par ligne :</p>
+          <textarea class="field" id="inputRecipientList" placeholder="Julie&#10;Marc&#10;Sophie" style="min-height:120px;"></textarea>
+          <p id="priceHint" style="font-size:13px;color:var(--gold);margin-top:8px;font-weight:600;"></p>
+        </div>
+
         <div class="actions">
           <span></span>
           <button class="btn btn-primary" id="btnStep1" disabled>Continuer</button>
@@ -170,6 +182,7 @@
         <textarea class="field" id="inputDetails" placeholder="Elle adore les fleurs et le rose, ton joyeux et chaleureux..."></textarea>
         <div class="photo-drop" id="photoDrop">📷 Ajouter une photo (optionnel)</div>
         <input type="file" id="photoInput" accept="image/*" style="display:none;" />
+        <p id="finalPriceRecap" style="font-size:14px;color:var(--gold);margin-top:14px;font-weight:600;"></p>
         <div class="actions">
           <button class="btn btn-ghost" id="btnBack3">← Retour</button>
           <button class="btn btn-primary" id="btnSubmit" disabled>Créer ma carte</button>
@@ -196,6 +209,26 @@
         <div class="result-actions">
           <a class="btn btn-primary" id="downloadBtn" download="wisheez-carte.mp4">Télécharger</a>
           <button class="btn btn-ghost" id="btnReset">Créer une autre carte</button>
+        </div>
+      </div>
+
+      <div data-step="campaign-payment">
+        <h2 class="step-title" style="margin-bottom:10px;">Récapitulatif du pack</h2>
+        <p id="campaignPriceSummary" style="font-size:16px;color:var(--gold);font-weight:600;margin-bottom:10px;"></p>
+        <p style="font-size:13px;color:var(--ink-soft);margin-bottom:20px;">Le paiement en ligne arrive bientôt. Pour l'instant, cliquez ci-dessous pour lancer la génération directement (mode test).</p>
+        <div class="actions">
+          <span></span>
+          <button class="btn btn-primary" id="btnGenerateCampaign">Lancer la génération (test)</button>
+        </div>
+      </div>
+
+      <div data-step="campaign-result" class="result">
+        <div class="confetti-burst" id="confettiBurstCampaign" aria-hidden="true"></div>
+        <h2 class="step-title" style="margin-bottom:8px;">Votre pack est prêt 🎁</h2>
+        <p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:16px;">Un lien personnel par destinataire, à partager comme vous voulez (WhatsApp, SMS, QR code).</p>
+        <div id="campaignRecipientList" style="display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto;"></div>
+        <div class="result-actions">
+          <button class="btn btn-ghost" id="btnResetCampaign">Créer une autre carte</button>
         </div>
       </div>
 
@@ -242,7 +275,7 @@
     localStorage.setItem('wisheez_client_id', clientId);
   }
 
-  const state = { destinataire: '', occasion: '', details: '', photoFile: null };
+  const state = { destinataire: '', occasion: '', details: '', photoFile: null, recipientCount: 1, recipientList: [], campaignId: null };
 
   function showStep(name) {
     document.querySelectorAll('[data-step]').forEach(el => el.classList.remove('active'));
@@ -252,7 +285,10 @@
 
   function updateProgressDots(stepName) {
     const dots = document.querySelectorAll('.progress-dot');
-    const stepNumber = { '1': 1, '2': 2, '3': 3, 'loading': 3, 'result': 3, 'error': 3 }[stepName] || 1;
+    const stepNumber = {
+      '1': 1, '2': 2, '3': 3, 'loading': 3, 'result': 3, 'error': 3,
+      'campaign-payment': 3, 'campaign-result': 3,
+    }[stepName] || 1;
     dots.forEach((dot, i) => {
       const n = i + 1;
       dot.classList.toggle('active', n === stepNumber);
@@ -284,14 +320,78 @@
   }
 
   // --- Étape 1 ---
+  const inputRecipientCount = document.getElementById('inputRecipientCount');
+  const singleNameBlock = document.getElementById('singleNameBlock');
+  const multiNameBlock = document.getElementById('multiNameBlock');
   const inputDestinataire = document.getElementById('inputDestinataire');
+  const inputRecipientList = document.getElementById('inputRecipientList');
+  const priceHint = document.getElementById('priceHint');
   const previewName = document.getElementById('previewName');
+  const btnStep1 = document.getElementById('btnStep1');
+
+  async function fetchQuote(count) {
+    try {
+      const res = await fetch('/api/campaign/quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipientCount: count }),
+      });
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
+
+  async function updatePriceHint() {
+    const count = state.recipientList.length;
+    if (count < 2) { priceHint.textContent = ''; return; }
+    const quote = await fetchQuote(count);
+    if (!quote) return;
+    if (quote.tier === 'quote') {
+      priceHint.textContent = `${count} destinataires — au-delà de 200, contactez-nous pour un devis.`;
+    } else {
+      priceHint.textContent = `${count} destinataires — ${(quote.totalCents / 100).toFixed(2)} € au total (${(quote.perUnitCents / 100).toFixed(2)} €/personne)`;
+    }
+  }
+
+  function validateStep1() {
+    const count = parseInt(inputRecipientCount.value, 10) || 1;
+    state.recipientCount = count;
+    if (count <= 1) {
+      btnStep1.disabled = !state.destinataire;
+    } else {
+      btnStep1.disabled = state.recipientList.length < 1;
+    }
+  }
+
+  inputRecipientCount.addEventListener('input', () => {
+    const count = parseInt(inputRecipientCount.value, 10) || 1;
+    state.recipientCount = count;
+    const isMulti = count > 1;
+    singleNameBlock.style.display = isMulti ? 'none' : 'block';
+    multiNameBlock.style.display = isMulti ? 'block' : 'none';
+    validateStep1();
+  });
+
   inputDestinataire.addEventListener('input', () => {
     state.destinataire = inputDestinataire.value.trim();
     previewName.textContent = state.destinataire ? 'Pour ' + state.destinataire : "Pour quelqu'un de spécial";
-    document.getElementById('btnStep1').disabled = !state.destinataire;
+    validateStep1();
   });
-  document.getElementById('btnStep1').addEventListener('click', () => showStep('2'));
+
+  inputRecipientList.addEventListener('input', () => {
+    state.recipientList = inputRecipientList.value
+      .split('\n')
+      .map(n => n.trim())
+      .filter(n => n.length > 0);
+    previewName.textContent = state.recipientList.length
+      ? `Pour ${state.recipientList.length} personnes`
+      : "Pour quelqu'un de spécial";
+    validateStep1();
+    updatePriceHint();
+  });
+
+  btnStep1.addEventListener('click', () => showStep('2'));
 
   // --- Étape 2 ---
   const previewOccasion = document.getElementById('previewOccasion');
@@ -314,13 +414,14 @@
       document.getElementById('btnStep2').disabled = false;
     });
   });
-  document.getElementById('btnStep2').addEventListener('click', () => showStep('3'));
   document.getElementById('btnBack2').addEventListener('click', () => showStep('1'));
   document.getElementById('btnBack3').addEventListener('click', () => showStep('2'));
 
   // --- Étape 3 ---
   const inputDetails = document.getElementById('inputDetails');
   const btnSubmit = document.getElementById('btnSubmit');
+  const finalPriceRecap = document.getElementById('finalPriceRecap');
+
   inputDetails.addEventListener('input', () => {
     state.details = inputDetails.value.trim();
     btnSubmit.disabled = !state.details;
@@ -337,8 +438,28 @@
     }
   });
 
+  document.getElementById('btnStep2').addEventListener('click', async () => {
+    showStep('3');
+    if (state.recipientCount > 1) {
+      const quote = await fetchQuote(state.recipientList.length);
+      finalPriceRecap.textContent = quote && quote.tier !== 'quote'
+        ? `Pack de ${state.recipientList.length} destinataires — ${(quote.totalCents / 100).toFixed(2)} € au total`
+        : `${state.recipientList.length} destinataires — au-delà de 200, contactez-nous directement`;
+    } else {
+      finalPriceRecap.textContent = '';
+    }
+  });
+
   // --- Soumission ---
   btnSubmit.addEventListener('click', async () => {
+    if (state.recipientCount > 1) {
+      await submitCampaign();
+    } else {
+      await submitSingleCard();
+    }
+  });
+
+  async function submitSingleCard() {
     showStep('loading');
     const formData = new FormData();
     formData.append('clientId', clientId);
@@ -370,12 +491,78 @@
       document.getElementById('errorMessage').textContent = "Impossible de contacter le serveur. Vérifiez votre connexion.";
       showStep('error');
     }
+  }
+
+  async function submitCampaign() {
+    showStep('loading');
+    const formData = new FormData();
+    formData.append('clientId', clientId);
+    formData.append('occasion', state.occasion);
+    formData.append('details', state.details);
+    formData.append('recipients', JSON.stringify(state.recipientList));
+    if (state.photoFile) formData.append('photo', state.photoFile);
+
+    try {
+      const res = await fetch('/api/campaign', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (!res.ok) {
+        document.getElementById('errorMessage').textContent = data.message || "La création du pack a échoué.";
+        showStep('error');
+        return;
+      }
+
+      state.campaignId = data.campaignId;
+      document.getElementById('campaignPriceSummary').textContent = data.message;
+      showStep('campaign-payment');
+    } catch (err) {
+      document.getElementById('errorMessage').textContent = "Impossible de contacter le serveur.";
+      showStep('error');
+    }
+  }
+
+  document.getElementById('btnGenerateCampaign').addEventListener('click', async () => {
+    showStep('loading');
+    try {
+      await fetch(`/api/campaign/${state.campaignId}/generate`, { method: 'POST' });
+      // Le rendu prend du temps (1 rendu par destinataire) : on interroge le statut toutes les 3s.
+      const poll = setInterval(async () => {
+        const res = await fetch(`/api/campaign/${state.campaignId}`);
+        const campaign = await res.json();
+        const allDone = campaign.recipients.every(r => r.status === 'rendered');
+        if (allDone) {
+          clearInterval(poll);
+          renderCampaignResult(campaign);
+        }
+      }, 3000);
+    } catch (err) {
+      document.getElementById('errorMessage').textContent = "La génération du pack a échoué.";
+      showStep('error');
+    }
   });
 
+  function renderCampaignResult(campaign) {
+    const list = document.getElementById('campaignRecipientList');
+    list.innerHTML = '';
+    campaign.recipients.forEach(r => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;background:var(--paper-soft);border-radius:10px;padding:10px 14px;';
+      row.innerHTML = `<span style="font-size:14px;">${r.name}</span><a href="${r.videoPath}" target="_blank" style="font-size:13px;color:var(--gold);font-weight:600;">Voir la carte →</a>`;
+      list.appendChild(row);
+    });
+    showStep('campaign-result');
+    triggerConfetti();
+  }
+
   document.getElementById('btnErrorBack').addEventListener('click', () => showStep('3'));
-  document.getElementById('btnReset').addEventListener('click', () => {
+
+  function resetAll() {
     state.destinataire = ''; state.occasion = ''; state.details = ''; state.photoFile = null;
+    state.recipientCount = 1; state.recipientList = []; state.campaignId = null;
     inputDestinataire.value = ''; inputDetails.value = '';
+    inputRecipientCount.value = '1'; inputRecipientList.value = '';
+    singleNameBlock.style.display = 'block'; multiNameBlock.style.display = 'none';
+    priceHint.textContent = ''; finalPriceRecap.textContent = '';
     document.querySelectorAll('.occasion-btn').forEach(b => b.classList.remove('selected'));
     photoDrop.textContent = '📷 Ajouter une photo (optionnel)';
     photoDrop.classList.remove('has-file');
@@ -383,11 +570,14 @@
     previewName.textContent = "Pour quelqu'un de spécial";
     previewOccasion.textContent = 'Votre carte';
     previewPanel.style.background = '';
-    document.getElementById('btnStep1').disabled = true;
+    btnStep1.disabled = true;
     document.getElementById('btnStep2').disabled = true;
     btnSubmit.disabled = true;
     showStep('1');
-  });
+  }
+
+  document.getElementById('btnReset').addEventListener('click', resetAll);
+  document.getElementById('btnResetCampaign').addEventListener('click', resetAll);
 </script>
 
 </body>
