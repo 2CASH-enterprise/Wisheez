@@ -328,14 +328,19 @@
   .pricing__title{font-size:clamp(26px,3.6vw,34px);max-width:24ch;margin:0 auto 18px;}
   .pricing__sub{color:var(--cream-ink-soft);max-width:44ch;margin:0 auto 40px;font-size:16px;}
   .pricing__row{
-    display:inline-flex;gap:0;border:1px solid rgba(246,239,224,0.16);
-    border-radius:18px;overflow:hidden;margin-bottom:36px;
+    display:flex;flex-wrap:wrap;justify-content:center;gap:0;border:1px solid rgba(246,239,224,0.16);
+    border-radius:18px;overflow:hidden;margin:0 auto 36px;max-width:720px;
   }
-  .pricing__col{padding:28px 34px;min-width:180px;}
+  .pricing__col{padding:24px 26px;min-width:150px;flex:1 1 150px;}
   .pricing__col + .pricing__col{border-left:1px solid rgba(246,239,224,0.16);}
-  .pricing__col-label{font-size:12.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--cream-ink-soft);margin-bottom:10px;}
-  .pricing__col-value{font-family:'Fraunces', serif;font-size:30px;color:var(--gold-light);}
-  .pricing__col-value small{font-family:'Inter',sans-serif;font-size:14px;color:var(--cream-ink-soft);font-weight:500;}
+  .pricing__col-label{font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--cream-ink-soft);margin-bottom:10px;}
+  .pricing__col-value{font-family:'Fraunces', serif;font-size:26px;color:var(--gold-light);}
+  .pricing__col-value small{font-family:'Inter',sans-serif;font-size:13px;color:var(--cream-ink-soft);font-weight:500;}
+  @media (max-width:640px){
+    .pricing__row{flex-direction:column;}
+    .pricing__col{border-left:none !important;width:100%;}
+    .pricing__col + .pricing__col{border-top:1px solid rgba(246,239,224,0.16);}
+  }
 
   /* ---------- FOOTER ---------- */
   footer{padding:48px 0 40px;border-top:1px solid rgba(246,239,224,0.12);}
@@ -589,17 +594,26 @@
   <div class="wrap">
     <div class="pricing">
       <h2 class="pricing__title">Simple : la première est offerte</h2>
-      <p class="pricing__sub">Aucun abonnement, aucun engagement. Vous ne payez que les cartes suivantes, quand vous en avez besoin.</p>
+      <p class="pricing__sub">Aucun abonnement, aucun engagement. Et pour un mariage ou un événement à plusieurs invités, un tarif dégressif s'applique automatiquement.</p>
       <div class="pricing__row">
         <div class="pricing__col">
           <div class="pricing__col-label">1ère carte</div>
           <div class="pricing__col-value">Offerte</div>
         </div>
         <div class="pricing__col">
-          <div class="pricing__col-label">Cartes suivantes</div>
+          <div class="pricing__col-label">Carte suivante</div>
           <div class="pricing__col-value">2,99 € <small>/ carte</small></div>
         </div>
+        <div class="pricing__col">
+          <div class="pricing__col-label">Pack événement <span style="display:block;font-size:10.5px;opacity:0.75;font-weight:400;">5 à 199 destinataires</span></div>
+          <div class="pricing__col-value">1,50 € <small>/ personne</small></div>
+        </div>
+        <div class="pricing__col">
+          <div class="pricing__col-label">Grand volume <span style="display:block;font-size:10.5px;opacity:0.75;font-weight:400;">200 destinataires et +</span></div>
+          <div class="pricing__col-value">Sur devis</div>
+        </div>
       </div>
+      <p style="font-size:13px;color:var(--cream-ink-soft);margin:-4px 0 32px;">Remerciements de mariage, invitations, annonces : une même histoire, un lien personnel par destinataire.</p>
       <div>
         <a class="btn-seal" href="http://89.116.111.3:3001/creer.html">
           <span class="btn-seal__dot" aria-hidden="true">
