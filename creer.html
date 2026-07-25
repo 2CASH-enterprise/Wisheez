@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Créer ma carte — Wisheez</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340;0,9..144,480;0,9..144,560;1,9..144,420;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1F3A2E; --paper:#F6EFE0; --paper-soft:#EFE6D2;
+    --gold:#C9A227; --gold-light:#E4C765; --ink:#142019;
+    --ink-soft:rgba(20,32,25,0.65); --cream-ink:rgba(246,239,224,0.85);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;min-height:100vh;background:var(--bg);color:var(--cream-ink);
+    font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;
+    padding:24px;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:480;margin:0;}
+  .app{width:100%;max-width:920px;}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;}
+  .brand{font-family:'Fraunces',serif;font-style:italic;color:var(--paper);font-size:19px;}
+  .back{color:var(--cream-ink);text-decoration:none;font-size:14px;opacity:0.75;}
+
+  .grid{display:grid;grid-template-columns:1fr;gap:28px;}
+  @media(min-width:800px){ .grid{grid-template-columns:1.15fr 0.85fr;} }
+
+  .panel{
+    background:var(--paper);border-radius:20px;padding:36px 32px;color:var(--ink);
+    min-height:360px;display:flex;flex-direction:column;
+  }
+  .step-badge{
+    width:36px;height:36px;border-radius:50%;background:var(--gold);
+    display:flex;align-items:center;justify-content:center;margin-bottom:20px;
+    font-family:'Fraunces',serif;font-size:14px;color:var(--bg);
+  }
+  .step-title{font-size:22px;margin-bottom:8px;}
+  .step-sub{font-size:14px;color:var(--ink-soft);margin-bottom:24px;}
+  .field{
+    width:100%;border:none;border-bottom:1.5px solid var(--gold);background:transparent;
+    font-family:'Inter',sans-serif;font-size:17px;padding:10px 2px;color:var(--ink);outline:none;
+  }
+  textarea.field{border:1.5px solid var(--gold);border-radius:10px;padding:14px;resize:vertical;min-height:110px;}
+  .occasions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:6px;}
+  @media(min-width:520px){ .occasions{grid-template-columns:repeat(3,1fr);} }
+  .occasion-btn{
+    border:1.5px solid rgba(20,32,25,0.16);background:var(--paper-soft);border-radius:10px;
+    padding:12px 10px;font-family:'Inter',sans-serif;font-size:13.5px;cursor:pointer;
+    color:var(--ink);transition:all 0.15s ease;text-align:center;
+  }
+  .occasion-btn:hover{border-color:var(--gold);}
+  .occasion-btn.selected{background:var(--gold);border-color:var(--gold);color:var(--bg);font-weight:600;}
+
+  .photo-drop{
+    border:1.5px dashed rgba(20,32,25,0.3);border-radius:12px;padding:20px;text-align:center;
+    margin-top:14px;cursor:pointer;font-size:13px;color:var(--ink-soft);
+  }
+  .photo-drop.has-file{border-color:var(--gold);color:var(--ink);}
+
+  .actions{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:24px;}
+  .btn{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:15px;padding:13px 26px;
+    border-radius:999px;border:none;cursor:pointer;transition:transform 0.15s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--bg);color:var(--paper);}
+  .btn-primary:disabled{opacity:0.35;cursor:not-allowed;transform:none;}
+  .btn-ghost{background:transparent;color:var(--ink-soft);}
+
+  /* --- Aperçu --- */
+  .preview{
+    border-radius:20px;display:flex;align-items:center;justify-content:center;padding:28px;
+    background:linear-gradient(160deg, var(--gold-light), var(--gold) 60%, #8a6d15);
+    transition:background 1s ease;
+  }
+  .preview-card{
+    width:100%;max-width:230px;aspect-ratio:3/4;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;gap:10px;
+  }
+  .preview-name{font-family:'Fraunces',serif;font-style:italic;font-size:24px;color:var(--paper);}
+  .preview-occ{font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(246,239,224,0.75);}
+
+  /* --- Résultat --- */
+  .result video{width:100%;border-radius:14px;background:#000;}
+  .result-actions{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap;}
+  .spinner{
+    width:34px;height:34px;border:3px solid rgba(20,32,25,0.15);border-top-color:var(--gold);
+    border-radius:50%;animation:spin 0.9s linear infinite;margin:0 auto 18px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .error-box{background:#fce9e6;border:1px solid #d85a30;color:#7a2c14;padding:14px 16px;border-radius:10px;font-size:14px;margin-top:14px;}
+
+  [data-step]{display:none;}
+  [data-step].active{display:flex;flex-direction:column;flex:1;}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="top">
+    <span class="brand">Wisheez</span>
+    <a class="back" href="https://2cash-enterprise.github.io/Wisheez/">← Retour</a>
+  </div>
+
+  <div class="grid">
+    <div class="panel" id="formPanel">
+
+      <div data-step="1" class="active">
+        <div class="step-badge">1</div>
+        <h2 class="step-title">Pour qui est cette carte ?</h2>
+        <p class="step-sub">Le prénom suffit.</p>
+        <input class="field" id="inputDestinataire" type="text" placeholder="Marie" autocomplete="off" />
+        <div class="actions">
+          <span></span>
+          <button class="btn btn-primary" id="btnStep1" disabled>Continuer</button>
+        </div>
+      </div>
+
+      <div data-step="2">
+        <div class="step-badge">2</div>
+        <h2 class="step-title">Quelle est l'occasion ?</h2>
+        <p class="step-sub">Ça oriente le ton et le style de la carte.</p>
+        <div class="occasions" id="occasionButtons">
+          <button class="occasion-btn" data-occasion="Anniversaire">Anniversaire</button>
+          <button class="occasion-btn" data-occasion="Mariage">Mariage</button>
+          <button class="occasion-btn" data-occasion="Naissance">Naissance</button>
+          <button class="occasion-btn" data-occasion="Félicitations">Félicitations</button>
+          <button class="occasion-btn" data-occasion="Noël">Noël</button>
+          <button class="occasion-btn" data-occasion="Saint-Valentin">Saint-Valentin</button>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost" id="btnBack2">← Retour</button>
+          <button class="btn btn-primary" id="btnStep2" disabled>Continuer</button>
+        </div>
+      </div>
+
+      <div data-step="3">
+        <div class="step-badge">3</div>
+        <h2 class="step-title">Dites-nous en plus</h2>
+        <p class="step-sub">Le ton souhaité, une couleur, un détail qui compte.</p>
+        <textarea class="field" id="inputDetails" placeholder="Elle adore les fleurs et le rose, ton joyeux et chaleureux..."></textarea>
+        <div class="photo-drop" id="photoDrop">📷 Ajouter une photo (optionnel)</div>
+        <input type="file" id="photoInput" accept="image/*" style="display:none;" />
+        <div class="actions">
+          <button class="btn btn-ghost" id="btnBack3">← Retour</button>
+          <button class="btn btn-primary" id="btnSubmit" disabled>Créer ma carte</button>
+        </div>
+      </div>
+
+      <div data-step="loading">
+        <div style="margin:auto;text-align:center;">
+          <div class="spinner"></div>
+          <p style="font-family:'Fraunces',serif;font-style:italic;font-size:17px;">Wisheez prépare votre carte...</p>
+          <p style="font-size:13px;color:var(--ink-soft);">Ça prend généralement moins d'une minute.</p>
+        </div>
+      </div>
+
+      <div data-step="result" class="result">
+        <h2 class="step-title" style="margin-bottom:16px;">Votre carte est prête 🎁</h2>
+        <video id="resultVideo" controls playsinline></video>
+        <p id="resultNote" style="font-size:13.5px;color:var(--ink-soft);margin-top:14px;"></p>
+        <div class="result-actions">
+          <a class="btn btn-primary" id="downloadBtn" download="wisheez-carte.mp4">Télécharger</a>
+          <button class="btn btn-ghost" id="btnReset">Créer une autre carte</button>
+        </div>
+      </div>
+
+      <div data-step="error">
+        <h2 class="step-title">Un souci est survenu</h2>
+        <p class="error-box" id="errorMessage"></p>
+        <div class="actions">
+          <button class="btn btn-ghost" id="btnErrorBack">← Retour</button>
+          <span></span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="preview" id="previewPanel">
+      <div class="preview-card">
+        <span class="preview-occ" id="previewOccasion">Votre carte</span>
+        <span class="preview-name" id="previewName">Pour quelqu'un de spécial</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Identifiant anonyme persistant pour suivre l'essai gratuit / le crédit,
+  // équivalent du numéro WhatsApp côté web.
+  let clientId = localStorage.getItem('wisheez_client_id');
+  if (!clientId) {
+    clientId = 'web-' + crypto.randomUUID();
+    localStorage.setItem('wisheez_client_id', clientId);
+  }
+
+  const state = { destinataire: '', occasion: '', details: '', photoFile: null };
+
+  function showStep(name) {
+    document.querySelectorAll('[data-step]').forEach(el => el.classList.remove('active'));
+    document.querySelector('[data-step="' + name + '"]').classList.add('active');
+  }
+
+  // --- Étape 1 ---
+  const inputDestinataire = document.getElementById('inputDestinataire');
+  const previewName = document.getElementById('previewName');
+  inputDestinataire.addEventListener('input', () => {
+    state.destinataire = inputDestinataire.value.trim();
+    previewName.textContent = state.destinataire ? 'Pour ' + state.destinataire : "Pour quelqu'un de spécial";
+    document.getElementById('btnStep1').disabled = !state.destinataire;
+  });
+  document.getElementById('btnStep1').addEventListener('click', () => showStep('2'));
+
+  // --- Étape 2 ---
+  const previewOccasion = document.getElementById('previewOccasion');
+  const previewPanel = document.getElementById('previewPanel');
+  const OCCASION_COLORS = {
+    'Anniversaire': 'linear-gradient(160deg,#E4C765,#C9A227 60%,#8a6d15)',
+    'Mariage': 'linear-gradient(160deg,#E8B4AE,#C9A227 60%,#8a6d15)',
+    'Naissance': 'linear-gradient(160deg,#cfe3d6,#8fb89e 60%,#4d6f5a)',
+    'Félicitations': 'linear-gradient(160deg,#f0d9a0,#C9A227 60%,#8a6d15)',
+    'Noël': 'linear-gradient(160deg,#7a2c2c,#1F3A2E 60%,#0e1a14)',
+    'Saint-Valentin': 'linear-gradient(160deg,#e8909a,#b23a4f 60%,#6b1c28)',
+  };
+  document.querySelectorAll('.occasion-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.occasion-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.occasion = btn.dataset.occasion;
+      previewOccasion.textContent = state.occasion;
+      previewPanel.style.background = OCCASION_COLORS[state.occasion] || OCCASION_COLORS['Anniversaire'];
+      document.getElementById('btnStep2').disabled = false;
+    });
+  });
+  document.getElementById('btnStep2').addEventListener('click', () => showStep('3'));
+  document.getElementById('btnBack2').addEventListener('click', () => showStep('1'));
+  document.getElementById('btnBack3').addEventListener('click', () => showStep('2'));
+
+  // --- Étape 3 ---
+  const inputDetails = document.getElementById('inputDetails');
+  const btnSubmit = document.getElementById('btnSubmit');
+  inputDetails.addEventListener('input', () => {
+    state.details = inputDetails.value.trim();
+    btnSubmit.disabled = !state.details;
+  });
+
+  const photoDrop = document.getElementById('photoDrop');
+  const photoInput = document.getElementById('photoInput');
+  photoDrop.addEventListener('click', () => photoInput.click());
+  photoInput.addEventListener('change', () => {
+    if (photoInput.files[0]) {
+      state.photoFile = photoInput.files[0];
+      photoDrop.textContent = '✓ ' + photoInput.files[0].name;
+      photoDrop.classList.add('has-file');
+    }
+  });
+
+  // --- Soumission ---
+  btnSubmit.addEventListener('click', async () => {
+    showStep('loading');
+    const formData = new FormData();
+    formData.append('clientId', clientId);
+    formData.append('destinataire', state.destinataire);
+    formData.append('occasion', state.occasion);
+    formData.append('details', state.details);
+    if (state.photoFile) formData.append('photo', state.photoFile);
+
+    try {
+      const res = await fetch('/api/generate', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (!res.ok) {
+        document.getElementById('errorMessage').textContent =
+          data.message || "La génération a échoué, réessayez dans un instant.";
+        showStep('error');
+        return;
+      }
+
+      const video = document.getElementById('resultVideo');
+      video.src = data.videoUrl;
+      document.getElementById('downloadBtn').href = data.videoUrl;
+      document.getElementById('resultNote').textContent = data.isFree
+        ? "Cette première carte est offerte 🎁 Les suivantes sont à 2,99 € pièce."
+        : "Et voilà ! Revenez quand vous voulez pour une nouvelle carte.";
+      showStep('result');
+    } catch (err) {
+      document.getElementById('errorMessage').textContent = "Impossible de contacter le serveur. Vérifiez votre connexion.";
+      showStep('error');
+    }
+  });
+
+  document.getElementById('btnErrorBack').addEventListener('click', () => showStep('3'));
+  document.getElementById('btnReset').addEventListener('click', () => {
+    state.destinataire = ''; state.occasion = ''; state.details = ''; state.photoFile = null;
+    inputDestinataire.value = ''; inputDetails.value = '';
+    document.querySelectorAll('.occasion-btn').forEach(b => b.classList.remove('selected'));
+    photoDrop.textContent = '📷 Ajouter une photo (optionnel)';
+    photoDrop.classList.remove('has-file');
+    photoInput.value = '';
+    previewName.textContent = "Pour quelqu'un de spécial";
+    previewOccasion.textContent = 'Votre carte';
+    previewPanel.style.background = '';
+    document.getElementById('btnStep1').disabled = true;
+    document.getElementById('btnStep2').disabled = true;
+    btnSubmit.disabled = true;
+    showStep('1');
+  });
+</script>
+
+</body>
+</html>
