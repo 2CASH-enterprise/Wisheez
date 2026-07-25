@@ -185,6 +185,50 @@
   @keyframes flapOpen{ to{ transform:rotateX(-165deg); } }
   @keyframes phoneRise{ to{opacity:1;transform:translate(-50%,0);} }
 
+  /* ---------- VITRINE D'EXEMPLES ---------- */
+  .showcase{padding-top:0;}
+  .showcase__head{max-width:56ch;margin-bottom:44px;}
+  .showcase__eyebrow{
+    font-size:13px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--gold-light);display:block;margin-bottom:14px;
+  }
+  .showcase__title{font-size:clamp(24px,3.2vw,32px);max-width:20ch;}
+  .showcase__sub{color:var(--cream-ink-soft);font-size:15px;margin-top:12px;max-width:44ch;}
+  .showcase__grid{
+    display:grid;grid-template-columns:1fr;gap:32px;margin-top:40px;
+  }
+  @media(min-width:700px){ .showcase__grid{grid-template-columns:1fr 1fr;} }
+  .showcase-card{
+    display:flex;gap:24px;align-items:center;
+    background:rgba(246,239,224,0.04);border:1px solid rgba(246,239,224,0.1);
+    border-radius:20px;padding:28px;
+    opacity:0;transform:translateY(14px);transition:opacity 0.6s ease, transform 0.6s ease;
+  }
+  .showcase-card.is-visible{opacity:1;transform:translateY(0);}
+  .showcase-phone{
+    width:120px;height:220px;background:var(--ink);border-radius:18px;padding:6px;flex:none;
+    box-shadow:0 18px 40px rgba(0,0,0,0.35);
+  }
+  .showcase-phone__screen{
+    width:100%;height:100%;border-radius:13px;overflow:hidden;position:relative;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .showcase-phone__play{
+    width:32px;height:32px;border-radius:50%;background:rgba(246,239,224,0.92);
+    display:flex;align-items:center;justify-content:center;position:relative;z-index:2;
+  }
+  .showcase-phone__play svg{width:11px;height:11px;margin-left:2px;}
+  .showcase-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.85;}
+  .showcase-icon svg{width:46px;height:46px;}
+  .showcase-copy{flex:1;}
+  .showcase-badge{
+    display:inline-block;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;
+    color:var(--gold-light);border:1px solid rgba(228,199,101,0.4);border-radius:999px;
+    padding:3px 10px;margin-bottom:10px;
+  }
+  .showcase-copy h3{font-size:18px;color:var(--paper);margin-bottom:8px;}
+  .showcase-copy p{font-size:14px;color:var(--cream-ink-soft);font-style:italic;line-height:1.55;}
+
   /* ---------- COMMENT CA MARCHE ---------- */
   .steps__head{max-width:52ch;margin-bottom:56px;}
   .steps__eyebrow{
@@ -320,6 +364,85 @@
   </header>
 </div>
 
+<section class="showcase">
+  <div class="wrap">
+    <span class="showcase__eyebrow">En vrai, ça donne quoi</span>
+    <h2 class="showcase__title">Deux histoires, deux cartes bien différentes</h2>
+    <p class="showcase__sub">Le style s'adapte à ce que vous racontez — voici deux exemples parmi des dizaines de combinaisons possibles.</p>
+
+    <div class="showcase__grid" id="showcaseGrid">
+
+      <!-- Jeu par défaut : affiché toute l'année sauf en novembre-décembre -->
+      <div class="showcase-card" data-set="default">
+        <div class="showcase-phone">
+          <div class="showcase-phone__screen" style="background:linear-gradient(160deg,#cfe3d6,#8fb89e 60%,#4d6f5a);">
+            <div class="showcase-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-9.3-9C1 8.5 2.5 5 6 5c2 0 3.3 1.1 4 2.2C10.7 6.1 12 5 14 5c3.5 0 5 3.5 3.3 7-2.3 4.5-9.3 9-9.3 9Z" fill="#F6EFE0" opacity="0.9"/></svg>
+            </div>
+            <div class="showcase-phone__play"><svg viewBox="0 0 12 12" fill="none"><path d="M1 1L11 6L1 11V1Z" fill="#1F3A2E"/></svg></div>
+          </div>
+        </div>
+        <div class="showcase-copy">
+          <span class="showcase-badge">Naissance</span>
+          <h3>Faire-part de bébé</h3>
+          <p>"Bienvenue parmi nous, petit trésor — le 12 juin, à 3,2 kg de bonheur."</p>
+        </div>
+      </div>
+
+      <div class="showcase-card" data-set="default">
+        <div class="showcase-phone">
+          <div class="showcase-phone__screen" style="background:linear-gradient(160deg,#E8B4AE,#C9A227 60%,#8a6d15);">
+            <div class="showcase-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="6" stroke="#F6EFE0" stroke-width="1.4" opacity="0.9"/><circle cx="15" cy="15" r="6" stroke="#F6EFE0" stroke-width="1.4" opacity="0.9"/></svg>
+            </div>
+            <div class="showcase-phone__play"><svg viewBox="0 0 12 12" fill="none"><path d="M1 1L11 6L1 11V1Z" fill="#1F3A2E"/></svg></div>
+          </div>
+        </div>
+        <div class="showcase-copy">
+          <span class="showcase-badge">Mariage</span>
+          <h3>Remerciements de mariage</h3>
+          <p>"Merci d'avoir célébré ce jour avec nous — Camille &amp; Thomas."</p>
+        </div>
+      </div>
+
+      <!-- Jeu fêtes de fin d'année : affiché automatiquement du 1er novembre au 31 décembre -->
+      <div class="showcase-card" data-set="holiday" style="display:none;">
+        <div class="showcase-phone">
+          <div class="showcase-phone__screen" style="background:linear-gradient(160deg,#7a2c2c,#1F3A2E 60%,#0e1a14);">
+            <div class="showcase-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v6M12 2c-2 2-2 4 0 6c2-2 2-4 0-6Z" stroke="#E4C765" stroke-width="1.3"/><circle cx="12" cy="15" r="6" stroke="#E4C765" stroke-width="1.3" opacity="0.9"/></svg>
+            </div>
+            <div class="showcase-phone__play"><svg viewBox="0 0 12 12" fill="none"><path d="M1 1L11 6L1 11V1Z" fill="#1F3A2E"/></svg></div>
+          </div>
+        </div>
+        <div class="showcase-copy">
+          <span class="showcase-badge">Fin d'année</span>
+          <h3>Vœux de fin d'année</h3>
+          <p>"Que cette nouvelle année vous apporte joie, lumière et de belles surprises."</p>
+        </div>
+      </div>
+
+      <div class="showcase-card" data-set="holiday" style="display:none;">
+        <div class="showcase-phone">
+          <div class="showcase-phone__screen" style="background:linear-gradient(160deg,#2b2b2b,#C9A227 70%,#8a6d15);">
+            <div class="showcase-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="6" r="1.4" fill="#F6EFE0"/><circle cx="18" cy="8" r="1" fill="#F6EFE0"/><circle cx="9" cy="17" r="1.2" fill="#F6EFE0"/><circle cx="16" cy="18" r="1" fill="#F6EFE0"/><circle cx="12" cy="11" r="1.6" fill="#F6EFE0"/></svg>
+            </div>
+            <div class="showcase-phone__play"><svg viewBox="0 0 12 12" fill="none"><path d="M1 1L11 6L1 11V1Z" fill="#1F3A2E"/></svg></div>
+          </div>
+        </div>
+        <div class="showcase-copy">
+          <span class="showcase-badge">Nouvel An</span>
+          <h3>Bonne année</h3>
+          <p>"On trinque à distance ? Meilleurs vœux pour cette nouvelle année."</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
 <section>
   <div class="wrap steps">
     <div class="steps__head">
@@ -446,6 +569,30 @@
   if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
     document.body.classList.add('js-animate');
   }
+
+  // Bascule automatique vers les exemples "fêtes de fin d'année" du 1er
+  // novembre au 31 décembre — le reste de l'année, on montre naissance/mariage.
+  (function swapSeasonalShowcase() {
+    const month = new Date().getMonth(); // 0 = janvier ... 10 = novembre, 11 = décembre
+    const isHolidaySeason = month === 10 || month === 11;
+    document.querySelectorAll('.showcase-card[data-set="default"]').forEach(el => {
+      el.style.display = isHolidaySeason ? 'none' : 'flex';
+    });
+    document.querySelectorAll('.showcase-card[data-set="holiday"]').forEach(el => {
+      el.style.display = isHolidaySeason ? 'flex' : 'none';
+    });
+  })();
+
+  // Légère apparition au scroll pour les cartes de la vitrine.
+  const showcaseObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('is-visible'), i * 120);
+        showcaseObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('.showcase-card').forEach(card => showcaseObserver.observe(card));
 </script>
 
 </body>
