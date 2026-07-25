@@ -164,6 +164,7 @@
         <div class="occasions" id="occasionButtons">
           <button class="occasion-btn" data-occasion="Anniversaire">Anniversaire</button>
           <button class="occasion-btn" data-occasion="Mariage">Mariage</button>
+          <button class="occasion-btn" data-occasion="Invitation">Invitation</button>
           <button class="occasion-btn" data-occasion="Naissance">Naissance</button>
           <button class="occasion-btn" data-occasion="Félicitations">Félicitations</button>
           <button class="occasion-btn" data-occasion="Noël">Noël</button>
@@ -399,6 +400,7 @@
   const OCCASION_COLORS = {
     'Anniversaire': 'linear-gradient(160deg,#E4C765,#C9A227 60%,#8a6d15)',
     'Mariage': 'linear-gradient(160deg,#E8B4AE,#C9A227 60%,#8a6d15)',
+    'Invitation': 'linear-gradient(160deg,#cbb8a8,#8a6d15 65%,#4d3d1f)',
     'Naissance': 'linear-gradient(160deg,#cfe3d6,#8fb89e 60%,#4d6f5a)',
     'Félicitations': 'linear-gradient(160deg,#f0d9a0,#C9A227 60%,#8a6d15)',
     'Noël': 'linear-gradient(160deg,#7a2c2c,#1F3A2E 60%,#0e1a14)',
@@ -438,8 +440,22 @@
     }
   });
 
+  const stepTitle3 = document.querySelector('[data-step="3"] .step-title');
+  const stepSub3 = document.querySelector('[data-step="3"] .step-sub');
+
   document.getElementById('btnStep2').addEventListener('click', async () => {
     showStep('3');
+
+    if (state.occasion === 'Invitation') {
+      stepTitle3.textContent = "Les détails de l'événement";
+      stepSub3.textContent = "Date, heure, lieu, tenue souhaitée — tout ce que vos invités doivent savoir.";
+      inputDetails.placeholder = "Le 14 juin à 16h, Domaine des Tilleuls, tenue de soirée souhaitée...";
+    } else {
+      stepTitle3.textContent = "Dites-nous en plus";
+      stepSub3.textContent = "Le ton souhaité, une couleur, un détail qui compte.";
+      inputDetails.placeholder = "Elle adore les fleurs et le rose, ton joyeux et chaleureux...";
+    }
+
     if (state.recipientCount > 1) {
       const quote = await fetchQuote(state.recipientList.length);
       finalPriceRecap.textContent = quote && quote.tier !== 'quote'
