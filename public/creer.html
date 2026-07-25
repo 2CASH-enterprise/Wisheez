@@ -86,12 +86,33 @@
   /* --- Résultat --- */
   .result video{width:100%;border-radius:14px;background:#000;}
   .result-actions{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap;}
-  .spinner{
-    width:34px;height:34px;border:3px solid rgba(20,32,25,0.15);border-top-color:var(--gold);
-    border-radius:50%;animation:spin 0.9s linear infinite;margin:0 auto 18px;
+  .result{position:relative;overflow:visible;}
+  .confetti-burst{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:5;}
+  .confetti-piece{
+    position:absolute;top:8%;left:50%;width:6px;height:6px;border-radius:1px;
+    background:var(--gold);opacity:0;
   }
-  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes confettiFall{
+    0%{opacity:0;transform:translate(0,0) rotate(0deg);}
+    10%{opacity:1;}
+    100%{opacity:0;transform:var(--end-transform);}
+  }
+
+  .seal-loader{
+    margin:0 auto 4px;
+    animation: sealBreathe 1.8s ease-in-out infinite;
+    transform-origin:center;
+  }
+  @keyframes sealBreathe{
+    0%,100%{transform:scale(1) rotate(0deg);}
+    50%{transform:scale(1.08) rotate(-3deg);}
+  }
   .error-box{background:#fce9e6;border:1px solid #d85a30;color:#7a2c14;padding:14px 16px;border-radius:10px;font-size:14px;margin-top:14px;}
+
+  .progress-dots{display:flex;gap:7px;}
+  .progress-dot{width:7px;height:7px;border-radius:50%;background:rgba(246,239,224,0.25);transition:background 0.3s ease, transform 0.3s ease;}
+  .progress-dot.active{background:var(--gold-light);transform:scale(1.3);}
+  .progress-dot.done{background:var(--gold);}
 
   [data-step]{display:none;}
   [data-step].active{display:flex;flex-direction:column;flex:1;}
@@ -102,6 +123,11 @@
 <div class="app">
   <div class="top">
     <span class="brand">Wisheez</span>
+    <div class="progress-dots" id="progressDots">
+      <span class="progress-dot active" data-dot="1"></span>
+      <span class="progress-dot" data-dot="2"></span>
+      <span class="progress-dot" data-dot="3"></span>
+    </div>
     <a class="back" href="https://2cash-enterprise.github.io/Wisheez/">← Retour</a>
   </div>
 
@@ -152,13 +178,18 @@
 
       <div data-step="loading">
         <div style="margin:auto;text-align:center;">
-          <div class="spinner"></div>
-          <p style="font-family:'Fraunces',serif;font-style:italic;font-size:17px;">Wisheez prépare votre carte...</p>
+          <svg class="seal-loader" viewBox="0 0 56 56" width="56" height="56">
+            <circle cx="28" cy="28" r="27" fill="#C9A227"/>
+            <circle cx="28" cy="28" r="27" fill="none" stroke="#8a6d15" stroke-width="1"/>
+            <text x="28" y="35" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="24" fill="#1F3A2E">W</text>
+          </svg>
+          <p style="font-family:'Fraunces',serif;font-style:italic;font-size:17px;margin-top:16px;">Wisheez prépare votre carte...</p>
           <p style="font-size:13px;color:var(--ink-soft);">Ça prend généralement moins d'une minute.</p>
         </div>
       </div>
 
       <div data-step="result" class="result">
+        <div class="confetti-burst" id="confettiBurst" aria-hidden="true"></div>
         <h2 class="step-title" style="margin-bottom:16px;">Votre carte est prête 🎁</h2>
         <video id="resultVideo" controls playsinline></video>
         <p id="resultNote" style="font-size:13.5px;color:var(--ink-soft);margin-top:14px;"></p>
@@ -216,6 +247,40 @@
   function showStep(name) {
     document.querySelectorAll('[data-step]').forEach(el => el.classList.remove('active'));
     document.querySelector('[data-step="' + name + '"]').classList.add('active');
+    updateProgressDots(name);
+  }
+
+  function updateProgressDots(stepName) {
+    const dots = document.querySelectorAll('.progress-dot');
+    const stepNumber = { '1': 1, '2': 2, '3': 3, 'loading': 3, 'result': 3, 'error': 3 }[stepName] || 1;
+    dots.forEach((dot, i) => {
+      const n = i + 1;
+      dot.classList.toggle('active', n === stepNumber);
+      dot.classList.toggle('done', n < stepNumber);
+    });
+  }
+
+  function triggerConfetti() {
+    if (!window.matchMedia('(prefers-reduced-motion: no-preference)').matches) return;
+    const container = document.getElementById('confettiBurst');
+    container.innerHTML = '';
+    const colors = ['#C9A227', '#E4C765', '#F6EFE0'];
+    const count = 16;
+    for (let i = 0; i < count; i++) {
+      const piece = document.createElement('span');
+      piece.className = 'confetti-piece';
+      const angle = (Math.random() - 0.5) * 220; // dispersion horizontale
+      const distance = 80 + Math.random() * 100;
+      const rotate = Math.random() * 360;
+      const endX = Math.sin(angle * Math.PI / 180) * distance;
+      const endY = distance;
+      piece.style.setProperty('--end-transform', `translate(${endX}px, ${endY}px) rotate(${rotate}deg)`);
+      piece.style.left = (45 + Math.random() * 10) + '%';
+      piece.style.background = colors[i % colors.length];
+      piece.style.animation = `confettiFall ${1.1 + Math.random() * 0.6}s ease-out ${Math.random() * 0.25}s forwards`;
+      container.appendChild(piece);
+    }
+    setTimeout(() => { container.innerHTML = ''; }, 2200);
   }
 
   // --- Étape 1 ---
@@ -300,6 +365,7 @@
         ? "Cette première carte est offerte 🎁 Les suivantes sont à 2,99 € pièce."
         : "Et voilà ! Revenez quand vous voulez pour une nouvelle carte.";
       showStep('result');
+      triggerConfetti();
     } catch (err) {
       document.getElementById('errorMessage').textContent = "Impossible de contacter le serveur. Vérifiez votre connexion.";
       showStep('error');
