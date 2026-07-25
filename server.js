@@ -2,9 +2,11 @@ require("dotenv").config();
 
 const express = require("express");
 const path = require("path");
+const cron = require("node-cron");
 const { getUser, updateUser, hasFreeCardLeft } = require("./lib/store");
 const { sendText, sendVideo, markAsRead, parseIncomingMessage } = require("./lib/whatsapp");
 const { generateCard } = require("./lib/generate");
+const { runDailyReminderCheck } = require("./lib/reminders");
 
 const app = express();
 app.use(express.json());
@@ -54,6 +56,12 @@ app.post("/webhook", async (req, res) => {
 async function handleMessage(incoming) {
   const { waId, text } = incoming;
   const user = getUser(waId);
+
+  if (/^stop$/i.test(text.trim())) {
+    updateUser(waId, { optedInMarketing: false });
+    await sendText(waId, "C'est noté, vous ne recevrez plus de rappels de notre part. Vous pouvez toujours m'écrire directement pour créer une carte quand vous le souhaitez.");
+    return;
+  }
 
   switch (user.state) {
     case "new":
@@ -150,6 +158,22 @@ async function handleMessage(incoming) {
     }
   }
 }
+
+// ---------- 4. Relances proactives avant les fêtes calendaires ----------
+// Tourne chaque jour à 9h locale. Tant que le template Marketing WhatsApp
+// n'est pas approuvé par Meta, sendReminderFn se contente de logger —
+// voir lib/reminders.js pour le détail.
+cron.schedule("0 9 * * *", async () => {
+  const result = await runDailyReminderCheck(async (waId, text, occasion) => {
+    // TODO : une fois le template Marketing approuvé par Meta, remplacer
+    // ce log par un vrai appel de template (sendText ne fonctionne que si
+    // l'utilisateur a écrit dans les dernières 24h, ce qui n'est pas garanti ici).
+    console.log(`[Rappel ${occasion.label}] à envoyer à ${waId} : "${text}"`);
+  });
+  if (result.sent > 0) {
+    console.log(`Rappels calendaires : ${result.sent} envoyé(s) pour ${result.occasions.join(", ")}`);
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Serveur Wisheez à l'écoute sur le port ${PORT}`);
