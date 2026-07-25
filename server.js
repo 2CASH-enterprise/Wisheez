@@ -7,8 +7,9 @@ const cron = require("node-cron");
 const multer = require("multer");
 const { getUser, updateUser, hasFreeCardLeft } = require("./lib/store");
 const { sendText, sendVideo, markAsRead, parseIncomingMessage } = require("./lib/whatsapp");
-const { generateCard } = require("./lib/generate");
+const { generateCard, writeCampaignTemplate, renderCampaignRecipient } = require("./lib/generate");
 const { runDailyReminderCheck } = require("./lib/reminders");
+const { calculatePrice, createCampaign, getCampaign, updateRecipient } = require("./lib/campaigns");
 
 const app = express();
 app.use(express.json());
@@ -100,6 +101,103 @@ app.post("/api/generate", upload.single("photo"), async (req, res) => {
     if (req.file) fs.unlink(req.file.path, () => {});
     res.status(500).json({ error: "generation_failed", message: "La génération a échoué, réessayez." });
   }
+});
+
+// ---------- 3c. Packs événement (plusieurs destinataires, même histoire) ----------
+
+// Calcul de prix en direct, pour affichage avant validation (aucune génération ici).
+app.post("/api/campaign/quote", (req, res) => {
+  const count = parseInt(req.body.recipientCount, 10);
+  if (!count || count < 1) return res.status(400).json({ error: "invalid_count" });
+  res.json(calculatePrice(count));
+});
+
+// Création d'une campagne : calcule le prix, enregistre les destinataires,
+// mais NE GÉNÈRE RIEN tant que le paiement n'est pas confirmé.
+app.post("/api/campaign", upload.single("photo"), async (req, res) => {
+  const { clientId, occasion, details } = req.body;
+  let recipients = req.body.recipients;
+
+  try {
+    recipients = JSON.parse(recipients); // tableau de prénoms envoyé en JSON depuis le formulaire
+  } catch {
+    return res.status(400).json({ error: "invalid_recipients", message: "Liste de destinataires invalide." });
+  }
+
+  if (!clientId || !occasion || !details || !Array.isArray(recipients) || recipients.length < 1) {
+    return res.status(400).json({ error: "missing_fields" });
+  }
+
+  const pricing = calculatePrice(recipients.length);
+  const campaign = createCampaign({
+    ownerClientId: clientId,
+    occasion,
+    details,
+    recipients,
+    photoPath: req.file ? req.file.path : null,
+  });
+
+  if (pricing.tier === "quote") {
+    return res.json({
+      campaignId: campaign.id,
+      pricing,
+      message: "Plus de 200 destinataires : contactez-nous directement pour un tarif adapté.",
+    });
+  }
+
+  // TODO : remplacer par un vrai lien de paiement Stripe pour pricing.totalCents.
+  // Une fois le paiement confirmé (webhook Stripe), appeler l'équivalent de
+  // POST /api/campaign/:id/generate ci-dessous automatiquement.
+  res.json({
+    campaignId: campaign.id,
+    pricing,
+    message: `Total : ${(pricing.totalCents / 100).toFixed(2)} € — lien de paiement à venir.`,
+  });
+});
+
+// Déclenche la génération réelle (1 appel Claude + 1 rendu par destinataire).
+// À appeler une fois le paiement confirmé — pour l'instant, déclenchable
+// manuellement pour les tests.
+app.post("/api/campaign/:id/generate", async (req, res) => {
+  const campaign = getCampaign(req.params.id);
+  if (!campaign) return res.status(404).json({ error: "not_found" });
+
+  try {
+    const templateHtmlPath = await writeCampaignTemplate(
+      { destinataire: "{{PRENOM_INVITE}}", occasion: campaign.occasion, details: campaign.details, photoPath: campaign.photoPath },
+      campaign.id
+    );
+
+    for (const recipient of campaign.recipients) {
+      const outputId = `${campaign.id}-${recipient.token}`;
+      const videoPath = renderCampaignRecipient(templateHtmlPath, recipient.name, outputId);
+      updateRecipient(campaign.id, recipient.token, {
+        videoPath: `${PUBLIC_BASE_URL}/media/${path.basename(videoPath)}`,
+        status: "rendered",
+      });
+    }
+
+    res.json({ campaignId: campaign.id, status: "done" });
+  } catch (err) {
+    console.error("Erreur génération campagne:", err);
+    res.status(500).json({ error: "generation_failed" });
+  }
+});
+
+// Statut d'une campagne (pour un tableau de bord simple côté client).
+app.get("/api/campaign/:id", (req, res) => {
+  const campaign = getCampaign(req.params.id);
+  if (!campaign) return res.status(404).json({ error: "not_found" });
+  res.json(campaign);
+});
+
+// Page/lien individuel qu'un destinataire reçoit (ex: via QR code ou lien direct).
+app.get("/api/campaign/:id/recipient/:token", (req, res) => {
+  const campaign = getCampaign(req.params.id);
+  if (!campaign) return res.status(404).json({ error: "not_found" });
+  const recipient = campaign.recipients.find((r) => r.token === req.params.token);
+  if (!recipient) return res.status(404).json({ error: "not_found" });
+  res.json({ name: recipient.name, videoUrl: recipient.videoPath, status: recipient.status });
 });
 
 // ---------- 3b. Logique de conversation (WhatsApp) ----------
