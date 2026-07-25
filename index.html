@@ -223,8 +223,12 @@
     border:1px solid rgba(246,239,224,0.55);
   }
   .showcase-phone__play svg{width:11px;height:11px;margin-left:2px;}
-  .showcase-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.85;z-index:1;}
-  .showcase-icon svg{width:46px;height:46px;}
+  .showcase-icon{position:absolute;inset:0;overflow:hidden;z-index:1;}
+  .bokeh{position:absolute;border-radius:50%;filter:blur(16px);}
+  .showcase-vignette{
+    position:absolute;inset:0;z-index:1;
+    background:radial-gradient(ellipse at 50% 42%, transparent 35%, rgba(0,0,0,0.28) 100%);
+  }
 
   @media (prefers-reduced-motion:no-preference){
     body.js-animate .showcase-card.is-visible .showcase-bg{
@@ -239,7 +243,11 @@
   }
   @keyframes showcaseZoom{ from{transform:scale(1);} to{transform:scale(1.14);} }
   @keyframes showcaseFloat{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
-  @keyframes showcasePulse{ 0%{transform:scale(0.9);opacity:0.9;} 100%{transform:scale(1.7);opacity:0;} }
+  @keyframes showcasePulse{
+    0%{transform:scale(0.9);opacity:0;}
+    15%{opacity:0.9;}
+    100%{transform:scale(1.7);opacity:0;}
+  }
   .showcase-copy{flex:1;}
   .showcase-badge{
     display:inline-block;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;
@@ -398,8 +406,11 @@
           <div class="showcase-phone__screen">
             <div class="showcase-bg" style="background:linear-gradient(160deg,#cfe3d6,#8fb89e 60%,#4d6f5a);"></div>
             <div class="showcase-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-9.3-9C1 8.5 2.5 5 6 5c2 0 3.3 1.1 4 2.2C10.7 6.1 12 5 14 5c3.5 0 5 3.5 3.3 7-2.3 4.5-9.3 9-9.3 9Z" fill="#F6EFE0" opacity="0.9"/></svg>
+              <div class="bokeh" style="width:90px;height:90px;top:20%;left:15%;background:#fbe4d8;opacity:0.5;"></div>
+              <div class="bokeh" style="width:60px;height:60px;top:50%;left:55%;background:#fff6ea;opacity:0.4;"></div>
+              <div class="bokeh" style="width:40px;height:40px;top:65%;left:25%;background:#e6c9a8;opacity:0.35;"></div>
             </div>
+            <div class="showcase-vignette"></div>
             <div class="showcase-phone__play"><svg viewBox="0 0 12 12" fill="none"><path d="M1 1L11 6L1 11V1Z" fill="#1F3A2E"/></svg></div>
           </div>
         </div>
@@ -415,8 +426,11 @@
           <div class="showcase-phone__screen">
             <div class="showcase-bg" style="background:linear-gradient(160deg,#E8B4AE,#C9A227 60%,#8a6d15);"></div>
             <div class="showcase-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="6" stroke="#F6EFE0" stroke-width="1.4" opacity="0.9"/><circle cx="15" cy="15" r="6" stroke="#F6EFE0" stroke-width="1.4" opacity="0.9"/></svg>
+              <div class="bokeh" style="width:85px;height:85px;top:18%;left:50%;background:#f9e2cf;opacity:0.45;"></div>
+              <div class="bokeh" style="width:55px;height:55px;top:55%;left:20%;background:#fff0dc;opacity:0.4;"></div>
+              <div class="bokeh" style="width:45px;height:45px;top:60%;left:65%;background:#e6b98a;opacity:0.35;"></div>
             </div>
+            <div class="showcase-vignette"></div>
             <div class="showcase-phone__play"><svg viewBox="0 0 12 12" fill="none"><path d="M1 1L11 6L1 11V1Z" fill="#1F3A2E"/></svg></div>
           </div>
         </div>
@@ -433,8 +447,11 @@
           <div class="showcase-phone__screen">
             <div class="showcase-bg" style="background:linear-gradient(160deg,#7a2c2c,#1F3A2E 60%,#0e1a14);"></div>
             <div class="showcase-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v6M12 2c-2 2-2 4 0 6c2-2 2-4 0-6Z" stroke="#E4C765" stroke-width="1.3"/><circle cx="12" cy="15" r="6" stroke="#E4C765" stroke-width="1.3" opacity="0.9"/></svg>
+              <div class="bokeh" style="width:70px;height:70px;top:20%;left:60%;background:#E4C765;opacity:0.4;"></div>
+              <div class="bokeh" style="width:36px;height:36px;top:55%;left:20%;background:#f2d98a;opacity:0.45;"></div>
+              <div class="bokeh" style="width:24px;height:24px;top:35%;left:30%;background:#fff3cf;opacity:0.5;"></div>
             </div>
+            <div class="showcase-vignette"></div>
             <div class="showcase-phone__play"><svg viewBox="0 0 12 12" fill="none"><path d="M1 1L11 6L1 11V1Z" fill="#1F3A2E"/></svg></div>
           </div>
         </div>
@@ -450,8 +467,12 @@
           <div class="showcase-phone__screen">
             <div class="showcase-bg" style="background:linear-gradient(160deg,#2b2b2b,#C9A227 70%,#8a6d15);"></div>
             <div class="showcase-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="6" r="1.4" fill="#F6EFE0"/><circle cx="18" cy="8" r="1" fill="#F6EFE0"/><circle cx="9" cy="17" r="1.2" fill="#F6EFE0"/><circle cx="16" cy="18" r="1" fill="#F6EFE0"/><circle cx="12" cy="11" r="1.6" fill="#F6EFE0"/></svg>
+              <div class="bokeh" style="width:18px;height:18px;top:22%;left:25%;background:#fff3cf;opacity:0.7;filter:blur(4px);"></div>
+              <div class="bokeh" style="width:14px;height:14px;top:65%;left:70%;background:#fff3cf;opacity:0.6;filter:blur(3px);"></div>
+              <div class="bokeh" style="width:60px;height:60px;top:35%;left:55%;background:#E4C765;opacity:0.35;"></div>
+              <div class="bokeh" style="width:26px;height:26px;top:60%;left:20%;background:#f2d98a;opacity:0.5;filter:blur(6px);"></div>
             </div>
+            <div class="showcase-vignette"></div>
             <div class="showcase-phone__play"><svg viewBox="0 0 12 12" fill="none"><path d="M1 1L11 6L1 11V1Z" fill="#1F3A2E"/></svg></div>
           </div>
         </div>
