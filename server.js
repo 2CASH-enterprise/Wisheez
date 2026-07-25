@@ -2,7 +2,9 @@ require("dotenv").config();
 
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const cron = require("node-cron");
+const multer = require("multer");
 const { getUser, updateUser, hasFreeCardLeft } = require("./lib/store");
 const { sendText, sendVideo, markAsRead, parseIncomingMessage } = require("./lib/whatsapp");
 const { generateCard } = require("./lib/generate");
@@ -10,6 +12,12 @@ const { runDailyReminderCheck } = require("./lib/reminders");
 
 const app = express();
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "public"))); // sert creer.html, index.html si copiés ici
+
+const upload = multer({
+  dest: path.join(__dirname, "uploads_tmp"),
+  limits: { fileSize: 8 * 1024 * 1024 }, // 8 Mo, large marge sous la limite WhatsApp
+});
 
 // Sert les vidéos générées à une URL publique, ex :
 // https://votredomaine.com/media/abc123.mp4 — c'est ce lien qu'on donne à WhatsApp.
@@ -18,6 +26,7 @@ app.use("/media", express.static(path.join(__dirname, "public", "media")));
 const PORT = process.env.PORT || 3000;
 const VERIFY_TOKEN = process.env.WEBHOOK_VERIFY_TOKEN;
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL; // ex: https://wisheez.votredomaine.com
+const CARD_PRICE_CENTS = 299;
 
 // ---------- 1. Vérification du webhook (obligatoire, une seule fois côté Meta) ----------
 app.get("/webhook", (req, res) => {
@@ -52,7 +61,48 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// ---------- 3. Logique de conversation ----------
+// ---------- 3. API pour le formulaire web (point d'entrée QR code / page web) ----------
+app.post("/api/generate", upload.single("photo"), async (req, res) => {
+  const { clientId, destinataire, occasion, details } = req.body;
+
+  if (!clientId || !destinataire || !occasion || !details) {
+    return res.status(400).json({ error: "missing_fields", message: "Tous les champs sont requis." });
+  }
+
+  const user = getUser(clientId);
+  const isFree = hasFreeCardLeft(user);
+
+  if (!isFree && user.credit < CARD_PRICE_CENTS) {
+    // TODO : remplacer par un vrai lien de paiement Stripe une fois branché.
+    return res.status(402).json({
+      error: "payment_required",
+      message: "Votre carte gratuite a déjà été utilisée. La suivante coûte 2,99 €.",
+    });
+  }
+
+  try {
+    const draft = { destinataire, occasion, details };
+    if (req.file) draft.photoPath = req.file.path;
+
+    const cardId = `${clientId}-${Date.now()}`;
+    const videoPath = await generateCard(draft, cardId);
+    const videoUrl = `${PUBLIC_BASE_URL}/media/${path.basename(videoPath)}`;
+
+    const newCount = user.cardsSent + 1;
+    const newCredit = isFree ? user.credit : user.credit - CARD_PRICE_CENTS;
+    updateUser(clientId, { cardsSent: newCount, credit: newCredit });
+
+    if (req.file) fs.unlink(req.file.path, () => {}); // nettoyage du fichier temporaire
+
+    res.json({ videoUrl, isFree });
+  } catch (err) {
+    console.error("Erreur génération (web):", err);
+    if (req.file) fs.unlink(req.file.path, () => {});
+    res.status(500).json({ error: "generation_failed", message: "La génération a échoué, réessayez." });
+  }
+});
+
+// ---------- 3b. Logique de conversation (WhatsApp) ----------
 async function handleMessage(incoming) {
   const { waId, text } = incoming;
   const user = getUser(waId);
@@ -98,7 +148,6 @@ async function handleMessage(incoming) {
     case "awaiting_details": {
       const draft = { ...user.draft, details: text };
       const isFree = hasFreeCardLeft(user);
-      const CARD_PRICE_CENTS = 299;
 
       // Pas de carte gratuite restante et pas assez de crédit : on arrête ici
       // et on redirige vers le paiement au lieu de générer.
